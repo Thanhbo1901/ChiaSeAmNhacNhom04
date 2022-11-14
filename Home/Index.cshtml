@@ -1,0 +1,210 @@
+﻿@using ChiaSeDuLich.Models;
+
+<div class="row conten-share-row conten-share-row_1">
+
+    @foreach (var item in Model)
+    {
+        IEnumerable<Comment> comments = item.OwnComments;
+        <div class="col conten-share-item">
+            <div class="title">@item.InforShareTitle</div>
+            <div class="contain-img">
+                <audio id="@("Audio" + item.InforShareId)" controls>
+                    <source src="../Public/Audios/@item.InforShareSource" type="audio/ogg">
+                    <source src="../Public/Audios/@item.InforShareSource" type="audio/mpeg">
+                </audio>
+                @*<button onclick="playAudio(@item.InforShareId)" type="button">Play Audio</button>*@
+            </div>
+            <div class="summary">
+                @item.InforShareContent
+            </div>
+            <button type="button" class="btn btn-info btn-lg view-detail" data-toggle="modal" data-target="#myModal" id="@(item.InforShareId)"> Chi tiết</button>
+            <div class="rate">
+                <span class="fa fa-star checked"></span>
+                <span class="fa fa-star checked"></span>
+                <span class="fa fa-star"></span>
+                <span class="fa fa-star"></span>
+                <span class="fa fa-star"></span>
+            </div>
+            <div class="contain-comment">
+                @foreach (var comm in comments)
+                {
+                    <div class="comment-item">
+                        <p class="user-comment">@comm.UserName</p>
+                        <p>@comm.CommentContent</p>
+                    </div>
+                }
+            </div>
+            <div class="your-comment">
+                <input type="text" id="@("userCm" + item.InforShareId)" placeholder="Vui lòng nhập bình luận..." style="width: 350px; padding: 5px" />
+                <input type="number" id="@("userRate" + item.InforShareId)" placeholder="Điểm đánh giá nhỏ hơn 100" max="100" style="width: 350px; padding: 5px" />
+                <button class="accept" onclick="pushComment(@item.InforShareId)">Đồng ý</button>
+            </div>
+        </div>
+    }
+</div>
+<!-- Modal -->
+<div class="modal fade" id="myModal" role="dialog">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content" id="modal-content-ct">
+            <div class="col conten-share-item-full">
+                <div class="title" id="titleDetail"></div>
+                <div class="contain-img">
+                    <img src="../Public/Images/music.png" width="200px" height="200px" id="imageDetail" />
+                </div>
+                <div id="conten-audio">
+
+                </div>
+                <div class="summary-full" id="summaryDetail">
+                </div>
+                <div class="rate">
+                    <span class="fa fa-star checked"></span>
+                    <span class="fa fa-star checked"></span>
+                    <span class="fa fa-star"></span>
+                    <span class="fa fa-star"></span>
+                    <span class="fa fa-star"></span>
+                    <span class="value-rank" id="value-rank" style="font-weight: 900"></span>
+                </div>
+                <div class="contain-comment" id="contain-comment">
+
+                </div>
+                <div class="your-comment">
+                    <input type="text" id="blview" placeholder="Vui lòng nhập bình luận..." style="width: 350px; padding: 5px" />
+                    <input type="number" id="dgview" placeholder="Điểm đánh giá nhỏ hơn 100" max="100" style="width: 350px; padding: 5px" />
+                </div>
+                <button class="accept" onclick="pushCommentFromDT()">Đồng ý</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+
+    $(document).ready(function () {
+        $(".view-detail").on("click", function (event) {
+            ViewDetail(event.target.id)
+        });
+        $('#myModal').on("click", function (event) {
+            var x = document.getElementById("audioDetailmas");
+            if (x) {
+                x.pause();
+            }
+        });
+        $('#modal-content-ct').on("click", function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        });
+    });
+    function pushComment(inforShareId) {
+
+        let userCm = 'userCm' + inforShareId;
+        let userRate = 'userRate' + inforShareId;
+        let userCmVal = $('#' + userCm).val();
+        let userRateVal = $('#' + userRate).val();
+        let userJson = localStorage.getItem("user");
+        let user = JSON.parse(userJson);
+        $.ajax({
+            type: "POST",
+            url: "/Comment/CreateComment", // the URL of the controller action method
+            data: { UserId: user.UserId, UserName: user.UserName, InforShareId: inforShareId, CommentContent: userCmVal }, // optional data
+            success: function (result) {
+                location.reload();
+            },
+            error: function (req, status, error) {
+                alert("Lỗi rồi ngủ đi");
+            }
+        });
+        $.ajax({
+            type: "POST",
+            url: "/Rank/CreateRank", // the URL of the controller action method
+            data: { UserId: user.UserId, UserName: user.UserName, InforShareId: inforShareId, Value: userRateVal }, // optional data
+            success: function (result) {
+                location.reload();
+            },
+            error: function (req, status, error) {
+                alert("Lỗi rồi ngủ đi");
+            }
+        });
+    }
+
+    async function pushCommentFromDT() {
+        let inforShareId = 0;
+        var ifs = await sessionStorage.getItem("inforShare");
+
+        if (ifs) {
+            var inbfor = JSON.parse(ifs);
+            if (inbfor) {
+                inforShareId = inbfor.InforShareId;
+            }
+            let userCmVal = $('#blview').val();
+            let userRateVal = $('#dgview').val();
+            let userJson = localStorage.getItem("user");
+            let user = JSON.parse(userJson);
+            $.ajax({
+                type: "POST",
+                url: "/Comment/CreateComment", // the URL of the controller action method
+                data: { UserId: user.UserId, UserName: user.UserName, InforShareId: inforShareId, CommentContent: userCmVal }, // optional data
+                success: function (result) {
+                    location.reload();
+                },
+                error: function (req, status, error) {
+                    alert("Lỗi rồi ngủ đi");
+                }
+            });
+            $.ajax({
+                type: "POST",
+                url: "/Rank/CreateRank", // the URL of the controller action method
+                data: { UserId: user.UserId, UserName: user.UserName, InforShareId: inforShareId, Value: userRateVal }, // optional data
+                success: function (result) {
+                    location.reload();
+                },
+                error: function (req, status, error) {
+                    alert("Lỗi rồi ngủ đi");
+                }
+            });
+        }
+    }
+
+    function ViewDetail(id) {
+        $.ajax({
+            type: "GET",
+            url: "/InforShare/DetailsIf?id=" + id, // the URL of the controller action method
+            success: function (result) {
+                if (result && result.Data) {
+                    sessionStorage.setItem("inforShare", JSON.stringify(result.Data));
+                    $("#titleDetail").html(result.Data.InforShareTitle);
+                    $("#imageDetail").attr("src", "../Public/Images/music.png");
+                    $("#audioDetail").attr("src",);
+                    $("#audioDetail2").attr("src", "../Public/Audios/" + result.Data.InforShareSource);
+                    $("#summaryDetail").html(result.Data.InforShareContent);
+                    if (result.Data.OwnComments && result.Data.OwnComments.length) {
+                        var htmlstr = "";
+                        for (var i = 0; i < result.Data.OwnComments.length; i++) {
+                            htmlstr += `<div class="comment-item"><p class="user-comment">` + result.Data.OwnComments[i].UserName + `</p > <p>` + result.Data.OwnComments[i].CommentContent + `</p></div>`
+                        }
+                    }
+                    $("#contain-comment").html(htmlstr);
+                    var strRank = result.Data.RankAve + " / 100";
+                    $("#value-rank").html(strRank);
+
+                    document.getElementById("conten-audio").innerHTML = `<audio controls id="audioDetailmas"><source src = ../Public/Audios/` + result.Data.InforShareSource + ` "type="audio/ogg" id = "audioDetail"></audio>`
+
+
+
+                }
+            },
+            error: function (req, status, error) {
+                alert("Lỗi rồi ngủ đi");
+            }
+        });
+    }
+    //function playAudio(id) {
+    //    var x = document.getElementById( "Audio" + id);
+    //    x.play();
+    //}
+
+    //function pauseAudio(id) {
+    //    var x = document.getElementById("Audio" + id);
+    //    x.pause();
+    //}
+</script>
+
