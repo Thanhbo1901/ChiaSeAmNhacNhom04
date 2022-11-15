@@ -1,0 +1,47 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/Content/bootstrap-grid.min.css" rel="stylesheet" />
+    <link href="~/Style/custom.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    @RenderSection("scripts", required: false)
+</head>
+<body>
+    <!-- ======= Header ======= -->
+    <header id="header" class="fixed-top header-cus">
+        
+        @if (ChiaSeDuLich.Controllers.LoginController.isLogin)
+        {
+            <div class="container d-flex align-items-center justify-content-between">
+                <h1 class="logo"><a href="@Url.Action("Index","Home")">MusicShare (Home)</a></h1>
+                <h1 class="logo"><a href="@Url.Action("Create","InforShares")">Chia sẻ</a></h1>
+                <a href="#">@ChiaSeDuLich.Controllers.LoginController.userName</a>
+                <a href="@Url.Action("Index","Login")">ĐĂNG XUẤT</a>
+            </div>
+        }
+
+    </header>
+    <div class="container body-content">
+        @RenderBody()
+    </div>
+
+
+    <script>
+        try {
+            let userJson = localStorage.getItem("user");
+            if (userJson) {
+                let user = JSON.parse(userJson);
+                $("#userlogined").html(user.UserName);
+            }
+        }
+        catch (e) {
+            console.log(e);
+        }
+    </script>
+</body>
+</html>
